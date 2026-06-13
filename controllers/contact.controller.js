@@ -1,4 +1,5 @@
 import ContactMessage from '../models/contactMessage.model.js';
+import { sendContactEmail } from '../config/mailer.js';
 
 export const submitContact = async (req, res, next) => {
   try {
@@ -11,6 +12,11 @@ export const submitContact = async (req, res, next) => {
     });
 
     await newMessage.save();
+    
+    // Send email notification in the background (non-blocking)
+    sendContactEmail({ name, email, message }).catch(err => {
+      console.error('Failed to send contact email notification:', err);
+    });
     
     res.status(201).json({
       success: true,
