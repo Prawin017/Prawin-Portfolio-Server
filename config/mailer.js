@@ -4,7 +4,9 @@ import nodemailer from 'nodemailer';
 // Helper to get transporter dynamically (ensuring process.env is populated)
 const getTransporter = () => {
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL/TLS
     auth: {
       user: process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '',
       pass: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.trim() : ''
