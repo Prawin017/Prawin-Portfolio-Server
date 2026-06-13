@@ -1,33 +1,25 @@
-import nodemailer from 'nodemailer';
-
-// Create the transporter using Gmail service
-// Helper to get transporter dynamically (ensuring process.env is populated)
-const getTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL/TLS
-    auth: {
-      user: process.env.EMAIL_USER ? process.env.EMAIL_USER.trim() : '',
-      pass: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.trim() : ''
-    }
-  });
-};
-
 /**
  * Sends an email notification when a new contact form message is received.
+ * Uses Resend HTTP API (Port 443) to bypass Render's free tier SMTP port restrictions.
  * @param {Object} data - The contact message data.
  * @param {string} data.name - The name of the sender.
  * @param {string} data.email - The email address of the sender.
  * @param {string} data.message - The message content.
  */
 export const sendContactEmail = async ({ name, email, message }) => {
-  const transporter = getTransporter();
-  const mailOptions = {
-    from: `"Portfolio Contact Form" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_RECEIVER,
+  const apiKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : '';
+  const receiver = process.env.EMAIL_RECEIVER ? process.env.EMAIL_RECEIVER.trim() : 'prawinkumar182001@gmail.com';
+
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY is not configured in environment variables.');
+  }
+
+  const emailData = {
+    // In Resend's free sandbox mode, you must send from 'onboarding@resend.dev'
+    from: 'Portfolio Contact Form <onboarding@resend.dev>',
+    to: receiver,
     subject: `New Portfolio Message from ${name}`,
-    replyTo: email, // Allows replying directly to the sender from your email client
+    reply_to: email, // Direct reply to sender
     html: `
       <!DOCTYPE html>
       <html>
@@ -42,7 +34,7 @@ export const sendContactEmail = async ({ name, email, message }) => {
             color: #334155;
           }
           .container {
-            max-width: 1000px;
+            max-width: 700px;
             width: 95%;
             margin: 40px auto;
             background: #ffffff;
@@ -146,5 +138,19 @@ export const sendContactEmail = async ({ name, email, message }) => {
     `
   };
 
-  return transporter.sendMail(mailOptions);
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(emailData)
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Resend API Error: ${response.status} - ${errorBody}`);
+  }
+
+  return response.json();
 };
