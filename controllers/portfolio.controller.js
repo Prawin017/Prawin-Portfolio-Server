@@ -97,17 +97,91 @@ export const getContactInfo = async (req, res, next) => {
 
 export const getHeroInfo = async (req, res, next) => {
   try {
-    const hero = await Hero.findOne({}).select('name role description badgeText avatarLetter -_id');
+    const hero = await Hero.findOne({}).select('name role description badgeText avatarLetter coffeeCount bugCount deployCount ideaCount roles funFacts');
+    
+    const defaultRoles = [
+      'Full-Stack Engineer',
+      'Problem Solver',
+      'Coffee-Driven Developer',
+      'Angular Specialist',
+      'Debug Detective',
+      'Human Stack Overflow',
+      'Chaos-to-Code Converter'
+    ];
+
+    const defaultFunFacts = [
+      '🐛 Thinks debugging is like detective work.',
+      '📈 Optimizing everything I touch.',
+      '🏦 Banking apps without banking stress.',
+      '🎯 Turning chaos into clean code.',
+      '☕ Runs on 100% Arabica & clean code.',
+      '🌙 Late-night fixes, early deployments.'
+    ];
+
     if (!hero) {
       return res.json({
         name: 'Prawin',
         role: 'Lead Full-Stack Engineer',
         description: 'Building robust, performance-optimized, and scalable web applications and solutions. Crafting elegant interfaces with modern web technologies.',
         badgeText: 'Open to Full-Time Roles',
-        avatarLetter: 'P'
+        avatarLetter: 'P',
+        coffeeCount: 42,
+        bugCount: 312,
+        deployCount: 148,
+        ideaCount: 89,
+        roles: defaultRoles,
+        funFacts: defaultFunFacts
       });
     }
-    res.json(hero);
+
+    // Self-healing database pattern: populate roles/funFacts if empty/missing
+    let needsUpdate = false;
+    if (!hero.roles || hero.roles.length === 0) {
+      hero.roles = defaultRoles;
+      needsUpdate = true;
+    }
+    if (!hero.funFacts || hero.funFacts.length === 0) {
+      hero.funFacts = defaultFunFacts;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      await hero.save();
+    }
+
+    res.json({
+      name: hero.name,
+      role: hero.role,
+      description: hero.description,
+      badgeText: hero.badgeText,
+      avatarLetter: hero.avatarLetter,
+      coffeeCount: hero.coffeeCount,
+      bugCount: hero.bugCount,
+      deployCount: hero.deployCount,
+      ideaCount: hero.ideaCount,
+      roles: hero.roles,
+      funFacts: hero.funFacts
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const incrementHeroMetric = async (req, res, next) => {
+  const { metric } = req.body;
+  const validMetrics = ['coffeeCount', 'bugCount', 'deployCount', 'ideaCount'];
+
+  if (!validMetrics.includes(metric)) {
+    return res.status(400).json({ error: 'Invalid metric name' });
+  }
+
+  try {
+    const updatedHero = await Hero.findOneAndUpdate(
+      {},
+      { $inc: { [metric]: 1 } },
+      { new: true, upsert: true }
+    );
+    res.json({ success: true, metric, value: updatedHero[metric] });
   } catch (error) {
     next(error);
   }

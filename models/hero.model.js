@@ -25,10 +25,34 @@ const heroSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  coffeeCount: {
+    type: Number,
+    default: 42
+  },
+  bugCount: {
+    type: Number,
+    default: 312
+  },
+  deployCount: {
+    type: Number,
+    default: 148
+  },
+  ideaCount: {
+    type: Number,
+    default: 89
+  },
+  roles: {
+    type: [String],
+    default: []
+  },
+  funFacts: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true
 });
 
-const Hero = mongoose.model('Hero', heroSchema);
+const Hero = mongoose.model('Hero', heroSchema, 'heros');
 export default Hero;

@@ -8,7 +8,8 @@ import {
   getHighlights,
   getSkillProficiencies,
   getContactInfo,
-  getHeroInfo
+  getHeroInfo,
+  incrementHeroMetric
 } from '../controllers/portfolio.controller.js';
 
 
@@ -23,6 +24,7 @@ router.get('/highlights', getHighlights);
 router.get('/skill-proficiencies', getSkillProficiencies);
 router.get('/contact-info', getContactInfo);
 router.get('/hero', getHeroInfo);
+router.post('/hero/increment', incrementHeroMetric);
 
 
 export default router;
