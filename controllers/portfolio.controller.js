@@ -50,7 +50,9 @@ export const getExperiences = async (req, res, next) => {
 
 export const getProjects = async (req, res, next) => {
   try {
-    const projects = await Project.find({}).select('id title badge badgeClass description tags category projectUrl githubUrl projectUrlEnabled githubUrlEnabled -_id');
+    const projects = await Project.find({})
+      .sort({ id: 1 })
+      .select('id title badge badgeClass description tags category projectUrl githubUrl projectUrlEnabled githubUrlEnabled -_id');
     res.json(projects);
   } catch (error) {
     next(error);
