@@ -17,7 +17,7 @@ const app = express();
 // Standard middleware
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim().replace(/\/$/, ''))
-  : ['http://localhost:4200'];
+  : ['http://localhost:4200', 'https://prawin-kumar-portfolio.netlify.app'];
 
 app.use(cors({
   origin: (origin, callback) => {
